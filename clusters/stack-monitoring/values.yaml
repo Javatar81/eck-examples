@@ -1,0 +1,21 @@
+# Stack monitoring: 2 monitored ES clusters + 1 monitoring ES + Kibana
+# https://www.elastic.co/docs/deploy-manage/monitor/stack-monitoring/eck-stack-monitoring
+
+version: "9.3.0"
+storageSize: 30Gi
+
+# Monitored clusters (elastic1, elastic2) — send metrics/logs to monitoring cluster
+monitoredClusters:
+  - name: elastic1
+    namespace: elastic1
+    nodeCount: 1
+  - name: elastic2
+    namespace: elastic2
+    nodeCount: 1
+
+# Monitoring cluster (elastic-monitoring) — receives metrics/logs, runs Kibana for Stack Monitoring UI
+monitoringCluster:
+  namespace: elastic-monitoring
+  elasticsearchName: monitoring
+  kibanaName: kibana
+  nodeCount: 1

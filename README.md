@@ -8,15 +8,21 @@ Deployment artifacts for [Elastic Cloud on Kubernetes (ECK)](https://www.elastic
 .
 ├── README.md
 ├── apps/
-│   ├── application-operator.yaml   # ArgoCD Application for ECK operator (Helm)
+│   ├── application-operator.yaml       # ArgoCD Application for ECK operator (Helm)
 │   ├── application-single-node.yaml
-│   └── application-multi-node.yaml
+│   ├── application-multi-node.yaml
+│   └── application-stack-monitoring.yaml   # 2 monitored ES + monitoring ES + Kibana
 └── clusters/
-    └── eck-stack/                # Single chart, shared values + profile overrides
+    ├── eck-stack/                # Single chart, shared values + profile overrides
+    └── stack-monitoring/         # Stack monitoring: elastic1, elastic2 + elastic-monitoring
         ├── Chart.yaml            # Wrapper chart (depends on eck-stack)
         ├── values.yaml           # Shared config (versions, Kibana, disabled components)
         ├── values-single-node.yaml   # Overrides: 1 ES node, 30Gi
         └── values-multi-node.yaml   # Overrides: 2 ES nodes, 50Gi
+    └── stack-monitoring/         # Raw ECK CRs (no eck-stack dep)
+        ├── Chart.yaml
+        ├── values.yaml
+        └── templates/            # Namespaces, Elasticsearch x3, Kibana x1
 ```
 
 ## Prerequisites
@@ -50,6 +56,7 @@ Or clone this repo into your Git server and update the `repoURL` in:
 
 - `apps/application-single-node.yaml`
 - `apps/application-multi-node.yaml`
+- `apps/application-stack-monitoring.yaml` (optional; see [Stack monitoring](#stack-monitoring))
 
 Then apply them. ArgoCD will render the Helm chart from `clusters/eck-stack` (which pulls in the official **eck-stack** chart as a dependency), using `values.yaml` plus either `values-single-node.yaml` or `values-multi-node.yaml` (merged in that order).
 
@@ -80,6 +87,28 @@ You can commit the resulting `Chart.lock` and `charts/` so ArgoCD has everything
 
 To use different namespaces, change `spec.destination.namespace` in the corresponding Application manifest.
 
+## Stack monitoring
+
+The **stack-monitoring** Application deploys a dedicated [Stack Monitoring](https://www.elastic.co/docs/deploy-manage/monitor/stack-monitoring/eck-stack-monitoring) setup:
+
+| Namespace           | Resources        | Role |
+|---------------------|------------------|------|
+| `elastic1`          | 1 Elasticsearch  | Monitored cluster (metrics/logs → monitoring) |
+| `elastic2`          | 1 Elasticsearch  | Monitored cluster (metrics/logs → monitoring) |
+| `elastic-monitoring`| 1 Elasticsearch + 1 Kibana | Monitoring cluster; use Kibana here for the Stack Monitoring UI |
+
+Deploy after the ECK operator is running:
+
+```bash
+kubectl apply -f apps/application-stack-monitoring.yaml
+```
+
+Set `spec.source.repoURL` and `spec.source.targetRevision` to your Git repo. The chart renders ECK Elasticsearch and Kibana CRs with explicit namespaces; Metricbeat and Filebeat sidecars are added by ECK for stack monitoring. Access Kibana for the monitoring cluster with:
+
+```bash
+kubectl -n elastic-monitoring port-forward svc/kibana-kb-http 5601:5601
+```
+
 ## Customization
 
 - **Stack version**: In `clusters/eck-stack/values.yaml`, set `eck-elasticsearch.version` and `eck-kibana.version` (e.g. `9.3.0`). Keep them aligned.
@@ -102,4 +131,5 @@ kubectl -n elastic get secret elasticsearch-es-elastic-user -o=jsonpath='{.data.
 
 - [Install ECK using a Helm chart](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart)
 - [Manage deployments (ECK)](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/manage-deployments)
+- [Enable stack monitoring on ECK](https://www.elastic.co/docs/deploy-manage/monitor/stack-monitoring/eck-stack-monitoring)
 - [ECK Stack Helm chart (Artifact Hub)](https://artifacthub.io/packages/helm/elastic/eck-stack)

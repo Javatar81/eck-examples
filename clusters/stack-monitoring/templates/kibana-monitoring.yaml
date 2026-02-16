@@ -1,0 +1,13 @@
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: {{ .Values.monitoringCluster.kibanaName }}
+  namespace: {{ .Values.monitoringCluster.namespace }}
+  labels:
+    app.kubernetes.io/name: stack-monitoring
+spec:
+  version: {{ .Values.version }}
+  count: 1
+  elasticsearchRef:
+    name: {{ .Values.monitoringCluster.elasticsearchName }}
+    namespace: {{ .Values.monitoringCluster.namespace }}

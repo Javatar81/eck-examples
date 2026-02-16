@@ -1,0 +1,29 @@
+# ArgoCD Application: stack monitoring — 2 monitored ES (elastic1, elastic2) + monitoring ES + Kibana (elastic-monitoring)
+# Deploy after the eck-operator Application is synced.
+# See: https://www.elastic.co/docs/deploy-manage/monitor/stack-monitoring/eck-stack-monitoring
+# Set spec.source.repoURL and spec.source.targetRevision to your Git repo.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eck-stack-monitoring
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Javatar81/eck-examples
+    path: clusters/stack-monitoring
+    targetRevision: main
+    helm:
+      releaseName: eck-stack-monitoring
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  # Chart renders resources with explicit metadata.namespace (elastic1, elastic2, elastic-monitoring)

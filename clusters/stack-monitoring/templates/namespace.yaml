@@ -1,0 +1,16 @@
+{{- range .Values.monitoredClusters }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .namespace }}
+  labels:
+    app.kubernetes.io/name: stack-monitoring
+{{- end }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.monitoringCluster.namespace }}
+  labels:
+    app.kubernetes.io/name: stack-monitoring

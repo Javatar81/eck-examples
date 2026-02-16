@@ -1,0 +1,6 @@
+apiVersion: v2
+name: stack-monitoring
+description: Two monitored Elasticsearch clusters (elastic1, elastic2) + one monitoring cluster with Kibana (elastic-monitoring). Stack monitoring enabled per Elastic docs.
+type: application
+version: 0.1.0
+appVersion: "9.3.0"

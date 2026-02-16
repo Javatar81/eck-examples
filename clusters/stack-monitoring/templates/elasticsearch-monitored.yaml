@@ -1,0 +1,35 @@
+{{- range .Values.monitoredClusters }}
+---
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: {{ .name }}
+  namespace: {{ .namespace }}
+  labels:
+    app.kubernetes.io/name: stack-monitoring
+spec:
+  version: {{ $.Values.version }}
+  monitoring:
+    metrics:
+      elasticsearchRefs:
+        - name: {{ $.Values.monitoringCluster.elasticsearchName }}
+          namespace: {{ $.Values.monitoringCluster.namespace }}
+    logs:
+      elasticsearchRefs:
+        - name: {{ $.Values.monitoringCluster.elasticsearchName }}
+          namespace: {{ $.Values.monitoringCluster.namespace }}
+  nodeSets:
+    - name: default
+      count: {{ .nodeCount }}
+      config:
+        node.store.allow_mmap: false
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: {{ $.Values.storageSize }}
+{{- end }}
