@@ -12,7 +12,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/your-org/eck-deployment-examples
+    repoURL: https://github.com/Javatar81/eck-examples
     path: operator/eck-operator
     targetRevision: main
     helm:
