@@ -14,14 +14,14 @@ spec:
     repoURL: https://github.com/Javatar81/eck-examples
     path: clusters/eck-stack
     targetRevision: main
-    destination:
-      server: https://kubernetes.default.svc
-      namespace: elastic
     helm:
       releaseName: eck-stack-single-node
       valueFiles:
         - values.yaml
         - values-single-node.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: elastic
   syncPolicy:
     automated:
       prune: true

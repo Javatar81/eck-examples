@@ -13,15 +13,15 @@ spec:
     repoURL: https://helm.elastic.co
     chart: eck-operator
     targetRevision: "3.3.0"
-    destination:
-      server: https://kubernetes.default.svc
-      namespace: elastic-system
     helm:
       releaseName: elastic-operator
       values: |
         # Cluster-wide installation (default)
         # installCRDs: true
         # createClusterScopedResources: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: elastic-system
   syncPolicy:
     automated:
       prune: true
