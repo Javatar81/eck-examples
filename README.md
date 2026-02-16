@@ -87,6 +87,17 @@ To use different namespaces, change `spec.destination.namespace` in the correspo
 - **Node count / profile**: `values-single-node.yaml` and `values-multi-node.yaml` override only the Elasticsearch `nodeSets` (count and storage); edit them to add node sets or change counts.
 - **Operator**: Chart version is set in the operator Application (`spec.source.targetRevision`). Update it to match the [ECK Helm chart](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart) version you want.
 
+## Accessing the Kibana instance
+
+- Port forwarding to access Kibana in your browser:
+```bash
+kubectl -n elastic port-forward svc/kibana-kb-http 5601:5601
+```
+- Retrieve the password for default user 'elastic':
+```bash
+kubectl -n elastic get secret elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
+```
+
 ## References
 
 - [Install ECK using a Helm chart](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart)
