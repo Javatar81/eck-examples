@@ -1,0 +1,31 @@
+# ArgoCD Application to install the ECK operator via the official Helm chart.
+# Install this first; then deploy cluster Applications (single-node, multi-node).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eck-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://helm.elastic.co
+    chart: eck-operator
+    targetRevision: "3.3.0"
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: elastic-system
+    helm:
+      releaseName: elastic-operator
+      values: |
+        # Cluster-wide installation (default)
+        # installCRDs: true
+        # createClusterScopedResources: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

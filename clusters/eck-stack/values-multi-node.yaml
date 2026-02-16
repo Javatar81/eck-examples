@@ -1,0 +1,19 @@
+# Overrides for multi-node: 2 Elasticsearch nodes, 50Gi storage per node.
+# Use with: -f values.yaml -f values-multi-node.yaml
+
+eck-stack:
+  eck-elasticsearch:
+    nodeSets:
+      - name: default
+        count: 2
+        config:
+          node.store.allow_mmap: false
+        volumeClaimTemplates:
+          - metadata:
+              name: elasticsearch-data
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 5Gi

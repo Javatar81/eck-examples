@@ -1,0 +1,30 @@
+# ArgoCD Application: single-node Elasticsearch + Kibana (1 ES node, 1 Kibana)
+# Deploy after the eck-operator Application is synced.
+# Set spec.source.repoURL to your Git repo URL and spec.source.targetRevision to branch/tag.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eck-stack-single-node
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Javatar81/eck-examples
+    path: clusters/eck-stack
+    targetRevision: main
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: elastic
+    helm:
+      releaseName: eck-stack-single-node
+      valueFiles:
+        - values.yaml
+        - values-single-node.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

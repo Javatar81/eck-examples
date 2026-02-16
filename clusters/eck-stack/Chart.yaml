@@ -1,0 +1,10 @@
+apiVersion: v2
+name: eck-stack
+description: Elasticsearch + Kibana via ECK Stack Helm chart (single-node or multi-node via values)
+type: application
+version: 0.1.0
+appVersion: "9.0"
+dependencies:
+  - name: eck-stack
+    version: "0.18.0"
+    repository: https://helm.elastic.co

@@ -1,0 +1,51 @@
+# Shared values for all ECK stack deployments.
+# Use with a profile: -f values.yaml -f values-single-node.yaml | values-multi-node.yaml
+# Values are under "eck-stack" so the dependency chart receives them.
+
+eck-stack:
+  eck-elasticsearch:
+    enabled: true
+    fullnameOverride: elasticsearch
+    version: "9.3.0"
+    nodeSets:
+      - name: default
+        count: 1
+        config:
+          # For dev/minimal; production should set vm.max_map_count=262144 and allow mmap
+          node.store.allow_mmap: false
+        volumeClaimTemplates:
+          - metadata:
+              name: elasticsearch-data
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 5Gi
+
+  eck-kibana:
+    enabled: true
+    fullnameOverride: kibana
+    version: "9.3.0"
+    elasticsearchRef:
+      name: elasticsearch
+    spec:
+      count: 1
+
+  # Disable other stack components
+  eck-agent:
+    enabled: false
+  eck-fleet-server:
+    enabled: false
+  eck-beats:
+    enabled: false
+  eck-logstash:
+    enabled: false
+  eck-apm-server:
+    enabled: false
+  eck-enterprise-search:
+    enabled: false
+  eck-autoops-agent-policy:
+    enabled: false
+  eck-package-registry:
+    enabled: false
