@@ -18,7 +18,7 @@ spec:
     helm:
       releaseName: elastic-operator
       valueFiles:
-        - values-trial.yaml
+        - values.yaml
       # To enable enterprise trial license, add:
       # values: |
       #   trialLicense:
