@@ -1,0 +1,10 @@
+apiVersion: v2
+name: eck-operator
+description: ECK operator with optional enterprise trial license Secret. Wraps the official eck-operator chart.
+type: application
+version: 0.1.0
+appVersion: "3.3.0"
+dependencies:
+  - name: eck-operator
+    version: "3.3.0"
+    repository: https://helm.elastic.co

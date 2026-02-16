@@ -1,0 +1,4 @@
+# Enable enterprise trial license (creates eck-trial-license Secret in elastic-system).
+# Use with: -f values.yaml -f values-trial.yaml
+trialLicense:
+  enabled: true

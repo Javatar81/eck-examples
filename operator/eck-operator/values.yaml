@@ -1,0 +1,13 @@
+# Wrapper around official eck-operator chart.
+# Subchart values can be set under "eck-operator:" (see Helm dependency pass-through).
+
+# Enable to create the eck-trial-license Secret in elastic-system.
+# ECK will pick up the secret and enable enterprise trial features.
+# See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s
+trialLicense:
+  enabled: false
+
+# Pass-through to the official eck-operator subchart (optional)
+# eck-operator:
+#   installCRDs: true
+#   createClusterScopedResources: true

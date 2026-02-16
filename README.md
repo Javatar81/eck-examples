@@ -1,6 +1,6 @@
 # ECK Deployment Examples for ArgoCD
 
-Deployment artifacts for [Elastic Cloud on Kubernetes (ECK)](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart) to be deployed via **ArgoCD**. The ECK operator is installed from the official Elastic Helm chart; Elasticsearch and Kibana are deployed using the official **eck-stack** Helm chart with custom value files.
+Deployment artifacts for [Elastic Cloud on Kubernetes (ECK)](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart) to be deployed via **ArgoCD**. The ECK operator is installed via a wrapper chart (official **eck-operator** + optional trial license); Elasticsearch and Kibana are deployed using the official **eck-stack** Helm chart with custom value files.
 
 ## Structure
 
@@ -8,21 +8,27 @@ Deployment artifacts for [Elastic Cloud on Kubernetes (ECK)](https://www.elastic
 .
 ├── README.md
 ├── apps/
-│   ├── application-operator.yaml       # ArgoCD Application for ECK operator (Helm)
+│   ├── application-operator.yaml       # ArgoCD Application for ECK operator (wrapper chart)
 │   ├── application-single-node.yaml
 │   ├── application-multi-node.yaml
-│   └── application-stack-monitoring.yaml   # 2 monitored ES + monitoring ES + Kibana
+│   └── application-stack-monitoring.yaml
+├── operator/
+│   └── eck-operator/             # Wrapper around official eck-operator chart
+│       ├── Chart.yaml            # Depends on elastic/eck-operator
+│       ├── values.yaml           # trialLicense.enabled, subchart overrides
+│       ├── values-trial.yaml     # Optional: enable enterprise trial license
+│       └── templates/
+│           └── eck-trial-license-secret.yaml   # Created when trialLicense.enabled
 └── clusters/
     ├── eck-stack/                # Single chart, shared values + profile overrides
-    └── stack-monitoring/         # Stack monitoring: elastic1, elastic2 + elastic-monitoring
-        ├── Chart.yaml            # Wrapper chart (depends on eck-stack)
-        ├── values.yaml           # Shared config (versions, Kibana, disabled components)
-        ├── values-single-node.yaml   # Overrides: 1 ES node, 30Gi
-        └── values-multi-node.yaml   # Overrides: 2 ES nodes, 50Gi
-    └── stack-monitoring/         # Raw ECK CRs (no eck-stack dep)
+    │   ├── Chart.yaml
+    │   ├── values.yaml
+    │   ├── values-single-node.yaml
+    │   └── values-multi-node.yaml
+    └── stack-monitoring/         # Raw ECK CRs (elastic1, elastic2, elastic-monitoring)
         ├── Chart.yaml
         ├── values.yaml
-        └── templates/            # Namespaces, Elasticsearch x3, Kibana x1
+        └── templates/
 ```
 
 ## Prerequisites
@@ -34,13 +40,15 @@ Deployment artifacts for [Elastic Cloud on Kubernetes (ECK)](https://www.elastic
 
 ### 1. Bootstrap the ECK operator
 
-Apply the operator Application so ArgoCD installs the ECK operator from the official Helm repo:
+Set `spec.source.repoURL` and `spec.source.targetRevision` in `apps/application-operator.yaml` to your Git repo, then apply:
 
 ```bash
 kubectl apply -f apps/application-operator.yaml
 ```
 
-Wait until the `eck-operator` Application is **Synced** and **Healthy**. The operator runs in the `elastic-system` namespace.
+ArgoCD will sync the **operator/eck-operator** chart (which wraps the official eck-operator Helm chart) into `elastic-system`. Wait until the Application is **Synced** and **Healthy**.
+
+**Enterprise trial license:** To enable the trial license, either set `trialLicense.enabled: true` in `operator/eck-operator/values.yaml`, or add `values-trial.yaml` to the Application's `helm.valueFiles`. When enabled, the chart creates the `eck-trial-license` Secret in `elastic-system` (label `license.k8s.elastic.co/type: enterprise_trial`, annotation `elastic.co/eula: accepted`).
 
 ### 2. Point cluster Applications to your Git repo
 
@@ -62,7 +70,7 @@ Then apply them. ArgoCD will render the Helm chart from `clusters/eck-stack` (wh
 
 ### 3. Helm dependencies (when using Git as source)
 
-The cluster charts depend on the **eck-stack** chart from `https://helm.elastic.co`. ArgoCD can resolve Helm dependencies from the chart’s `Chart.yaml` when the repo is a Helm-capable source. If your ArgoCD setup does not run `helm dependency build`, either:
+The **operator/eck-operator** and **clusters/eck-stack** charts depend on charts from `https://helm.elastic.co`. ArgoCD can resolve Helm dependencies from the chart’s `Chart.yaml` when the repo is a Helm-capable source. If your ArgoCD setup does not run `helm dependency build`, either:
 
 - Use a CI step that runs `helm dependency build` in `clusters/eck-stack` and commits `Chart.lock` and `charts/*.tgz`, or  
 - Configure ArgoCD to use a Helm repository source for **eck-stack** and your Git repo only for the wrapper chart and values (e.g. via ApplicationSet or a chart that references the OCI/Helm repo).
@@ -70,6 +78,7 @@ The cluster charts depend on the **eck-stack** chart from `https://helm.elastic.
 To generate `Chart.lock` and the `charts/` directory locally:
 
 ```bash
+cd operator/eck-operator && helm dependency update && cd ../..
 cd clusters/eck-stack && helm dependency update && cd ../..
 ```
 
@@ -116,7 +125,8 @@ kubectl -n elastic-monitoring port-forward svc/kibana-kb-http 5601:5601
 - **Stack version**: In `clusters/eck-stack/values.yaml`, set `eck-elasticsearch.version` and `eck-kibana.version` (e.g. `9.3.0`). Keep them aligned.
 - **Storage**: Adjust `volumeClaimTemplates` in `values.yaml` (default) or in the profile files (per-environment overrides).
 - **Node count / profile**: `values-single-node.yaml` and `values-multi-node.yaml` override only the Elasticsearch `nodeSets` (count and storage); edit them to add node sets or change counts.
-- **Operator**: Chart version is set in the operator Application (`spec.source.targetRevision`). Update it to match the [ECK Helm chart](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart) version you want.
+- **Operator**: ECK operator version is set in `operator/eck-operator/Chart.yaml` (dependency version). Update it to match the [ECK Helm chart](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart) version you want.
+- **Trial license**: Set `trialLicense.enabled: true` in `operator/eck-operator/values.yaml` or use `values-trial.yaml` in the operator Application's `valueFiles` to create the `eck-trial-license` Secret.
 
 ## Accessing the Kibana instance
 

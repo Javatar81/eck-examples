@@ -1,5 +1,7 @@
-# ArgoCD Application to install the ECK operator via the official Helm chart.
-# Install this first; then deploy cluster Applications (single-node, multi-node).
+# ArgoCD Application to install the ECK operator via the wrapper chart (operator/eck-operator).
+# The wrapper adds optional eck-trial-license Secret; set trialLicense.enabled in values to enable.
+# Install this first; then deploy cluster Applications (single-node, multi-node, stack-monitoring).
+# Set spec.source.repoURL and spec.source.targetRevision to your Git repo.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -10,15 +12,17 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://helm.elastic.co
-    chart: eck-operator
-    targetRevision: "3.3.0"
+    repoURL: https://github.com/your-org/eck-deployment-examples
+    path: operator/eck-operator
+    targetRevision: main
     helm:
       releaseName: elastic-operator
-      values: |
-        # Cluster-wide installation (default)
-        # installCRDs: true
-        # createClusterScopedResources: true
+      valueFiles:
+        - values-trial.yaml
+      # To enable enterprise trial license, add:
+      # values: |
+      #   trialLicense:
+      #     enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: elastic-system
