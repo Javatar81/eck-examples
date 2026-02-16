@@ -7,6 +7,22 @@ metadata:
     app.kubernetes.io/name: stack-monitoring
 spec:
   version: {{ .Values.version }}
+  # Connect to monitored clusters as remote clusters for CCS (Cross-Cluster Search) from this Kibana.
+  # Remote clusters (elastic1, elastic2) must have spec.remoteClusterServer.enabled: true.
+  # See: https://www.elastic.co/docs/deploy-manage/remote-clusters/eck-remote-clusters
+  remoteClusters:
+    {{- range .Values.monitoredClusters }}
+    - name: {{ .name }}
+      elasticsearchRef:
+        name: {{ .name }}
+        namespace: {{ .namespace }}
+      apiKey:
+        access:
+          search:
+            names: ["*"]
+          replication:
+            names: ["*"]
+    {{- end }}
   nodeSets:
     - name: default
       count: {{ .Values.monitoringCluster.nodeCount }}

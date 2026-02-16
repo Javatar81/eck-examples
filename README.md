@@ -95,7 +95,9 @@ The **stack-monitoring** Application deploys a dedicated [Stack Monitoring](http
 |---------------------|------------------|------|
 | `elastic1`          | 1 Elasticsearch  | Monitored cluster (metrics/logs → monitoring) |
 | `elastic2`          | 1 Elasticsearch  | Monitored cluster (metrics/logs → monitoring) |
-| `elastic-monitoring`| 1 Elasticsearch + 1 Kibana | Monitoring cluster; use Kibana here for the Stack Monitoring UI |
+| `elastic-monitoring`| 1 Elasticsearch + 1 Kibana | Monitoring cluster; Stack Monitoring UI and **CCS** (Cross-Cluster Search) to elastic1/elastic2 |
+
+The two monitored clusters have **remote cluster server** enabled; the monitoring cluster is configured with **remote clusters** (API key) so you can run [Cross-Cluster Search (CCS)](https://www.elastic.co/docs/deploy-manage/remote-clusters/eck-remote-clusters) from the monitoring Kibana against `elastic1` and `elastic2`.
 
 Deploy after the ECK operator is running:
 
@@ -119,17 +121,33 @@ kubectl -n elastic-monitoring port-forward svc/kibana-kb-http 5601:5601
 ## Accessing the Kibana instance
 
 - Port forwarding to access Kibana in your browser:
+
 ```bash
 kubectl -n elastic port-forward svc/kibana-kb-http 5601:5601
 ```
+
 - Retrieve the password for default user 'elastic':
+
 ```bash
 kubectl -n elastic get secret elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
 ```
+
+
+- For stack monitoring example use:
+
+```bash
+kubectl -n elastic-monitoring port-forward svc/kibana-kb-http 5601:5601
+```
+
+```bash
+kubectl -n elastic-monitoring get secret monitoring-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
+```
+ 
 
 ## References
 
 - [Install ECK using a Helm chart](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart)
 - [Manage deployments (ECK)](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/manage-deployments)
 - [Enable stack monitoring on ECK](https://www.elastic.co/docs/deploy-manage/monitor/stack-monitoring/eck-stack-monitoring)
+- [Remote clusters on ECK (CCS)](https://www.elastic.co/docs/deploy-manage/remote-clusters/eck-remote-clusters)
 - [ECK Stack Helm chart (Artifact Hub)](https://artifacthub.io/packages/helm/elastic/eck-stack)

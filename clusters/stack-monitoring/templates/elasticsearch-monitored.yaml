@@ -9,6 +9,10 @@ metadata:
     app.kubernetes.io/name: stack-monitoring
 spec:
   version: {{ $.Values.version }}
+  # Enable remote cluster server so the monitoring cluster can run CCS against this cluster.
+  # See: https://www.elastic.co/docs/deploy-manage/remote-clusters/eck-remote-clusters
+  remoteClusterServer:
+    enabled: true
   monitoring:
     metrics:
       elasticsearchRefs:
