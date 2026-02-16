@@ -126,7 +126,7 @@ kubectl -n elastic-monitoring port-forward svc/kibana-kb-http 5601:5601
 - **Storage**: Adjust `volumeClaimTemplates` in `values.yaml` (default) or in the profile files (per-environment overrides).
 - **Node count / profile**: `values-single-node.yaml` and `values-multi-node.yaml` override only the Elasticsearch `nodeSets` (count and storage); edit them to add node sets or change counts.
 - **Operator**: ECK operator version is set in `operator/eck-operator/Chart.yaml` (dependency version). Update it to match the [ECK Helm chart](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart) version you want.
-- **Trial license**: Set `trialLicense.enabled: true` in `operator/eck-operator/values.yaml` or use `values-trial.yaml` in the operator Application's `valueFiles` to create the `eck-trial-license` Secret.
+- **Trial license**: Set `trialLicense.enabled: true` in `operator/eck-operator/values.yaml` or use `values-trial.yaml` in the operator Application's `valueFiles` to create the `eck-trial-license` Secret. By setting this to true you are expressing that you have accepted the Elastic EULA which can be found at https://www.elastic.co/eula.
 
 ## Accessing the Kibana instance
 
