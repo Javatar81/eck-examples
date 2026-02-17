@@ -4,9 +4,6 @@
 version: "9.3.0"
 storageSize: 30Gi
 
-# ServiceAccount name used by monitored ES pods to access the monitoring Elasticsearch
-crossNamespaceServiceAccountName: eck-cross-namespace-sa
-
 # Monitored clusters (elastic1, elastic2) — send metrics/logs to monitoring cluster
 monitoredClusters:
   - name: elastic1

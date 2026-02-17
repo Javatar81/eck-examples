@@ -3,3 +3,6 @@
 # Use with: -f values.yaml -f values-enforce-rbac.yaml
 # See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/restrict-cross-namespace-resource-associations
 enforceRBAC: true
+
+monitoringCluster:
+  serviceAccountName: eck-monitoring-sa
