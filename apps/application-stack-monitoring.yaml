@@ -19,7 +19,7 @@ spec:
       releaseName: eck-stack-monitoring
       valueFiles:
         - values.yaml
-        - values-rbac.yaml
+        - values-enforce-rbac.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: default
