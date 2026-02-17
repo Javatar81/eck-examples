@@ -6,3 +6,6 @@ enforceRBAC: true
 
 monitoringCluster:
   serviceAccountName: eck-monitoring-sa
+
+monitoredClusters:
+  serviceAccountName: eck-monitored-sa

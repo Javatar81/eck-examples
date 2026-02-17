@@ -24,7 +24,7 @@ spec:
           namespace: {{ $.Values.monitoringCluster.namespace }}
   {{- if $.Values.enforceRBAC }}
   # Required when operator runs with --enforce-rbac-on-refs (cross-namespace ref to monitoring ES).
-  serviceAccountName: {{ $.Values.monitoringCluster.serviceAccountName }}
+  serviceAccountName: {{ $.Values.monitoredClusters.serviceAccountName }}
   {{- end }}
   nodeSets:
     - name: default
