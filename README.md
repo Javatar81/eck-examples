@@ -114,7 +114,11 @@ Deploy after the ECK operator is running:
 kubectl apply -f apps/application-stack-monitoring.yaml
 ```
 
-Set `spec.source.repoURL` and `spec.source.targetRevision` to your Git repo. The chart renders ECK Elasticsearch and Kibana CRs with explicit namespaces; Metricbeat and Filebeat sidecars are added by ECK for stack monitoring. Access Kibana for the monitoring cluster with:
+Set `spec.source.repoURL` and `spec.source.targetRevision` to your Git repo. The chart renders ECK Elasticsearch and Kibana CRs with explicit namespaces; Metricbeat and Filebeat sidecars are added by ECK for stack monitoring.
+
+**Cross-namespace RBAC:** If the ECK operator is started with `--enforce-rbac-on-refs` (e.g. operator with `values-rbac.yaml`), set `enforceRBAC: true` in `clusters/stack-monitoring/values.yaml` or add `values-enforce-rbac.yaml` to the stack-monitoring Application's `valueFiles`. The chart will then create the [ClusterRole, ServiceAccounts, and RoleBindings](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/restrict-cross-namespace-resource-associations) so the monitored clusters (elastic1, elastic2) can associate with the monitoring Elasticsearch in `elastic-monitoring`.
+
+Access Kibana for the monitoring cluster with:
 
 ```bash
 kubectl -n elastic-monitoring port-forward svc/kibana-kb-http 5601:5601
@@ -159,5 +163,6 @@ kubectl -n elastic-monitoring get secret monitoring-es-elastic-user -o=jsonpath=
 - [Install ECK using a Helm chart](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart)
 - [Manage deployments (ECK)](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/manage-deployments)
 - [Enable stack monitoring on ECK](https://www.elastic.co/docs/deploy-manage/monitor/stack-monitoring/eck-stack-monitoring)
+- [Restrict cross-namespace resource associations (RBAC)](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/restrict-cross-namespace-resource-associations)
 - [Remote clusters on ECK (CCS)](https://www.elastic.co/docs/deploy-manage/remote-clusters/eck-remote-clusters)
 - [ECK Stack Helm chart (Artifact Hub)](https://artifacthub.io/packages/helm/elastic/eck-stack)

@@ -1,0 +1,5 @@
+# Enable RBAC resources for cross-namespace associations (elastic1/elastic2 -> monitoring).
+# Use when the ECK operator is started with --enforce-rbac-on-refs (e.g. operator values-rbac.yaml).
+# Use with: -f values.yaml -f values-enforce-rbac.yaml
+# See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/restrict-cross-namespace-resource-associations
+enforceRBAC: true

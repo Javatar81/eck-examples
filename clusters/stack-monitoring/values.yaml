@@ -4,6 +4,13 @@
 version: "9.3.0"
 storageSize: 30Gi
 
+# When true, create RBAC (ClusterRole, ServiceAccounts, RoleBindings) so cross-namespace
+# associations (elastic1/elastic2 -> monitoring) work with operator --enforce-rbac-on-refs.
+# See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/restrict-cross-namespace-resource-associations
+enforceRBAC: false
+# ServiceAccount name used by monitored ES pods to access the monitoring Elasticsearch
+crossNamespaceServiceAccountName: eck-cross-namespace-sa
+
 # Monitored clusters (elastic1, elastic2) — send metrics/logs to monitoring cluster
 monitoredClusters:
   - name: elastic1

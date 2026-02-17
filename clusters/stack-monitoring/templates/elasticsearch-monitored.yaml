@@ -22,6 +22,10 @@ spec:
       elasticsearchRefs:
         - name: {{ $.Values.monitoringCluster.elasticsearchName }}
           namespace: {{ $.Values.monitoringCluster.namespace }}
+  {{- if $.Values.enforceRBAC }}
+  # Required when operator runs with --enforce-rbac-on-refs (cross-namespace ref to monitoring ES).
+  serviceAccountName: {{ $.Values.crossNamespaceServiceAccountName }}
+  {{- end }}
   nodeSets:
     - name: default
       count: {{ .nodeCount }}
