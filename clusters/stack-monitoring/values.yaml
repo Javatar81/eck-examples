@@ -19,5 +19,6 @@ monitoringCluster:
   elasticsearchName: monitoring
   kibanaName: kibana
   nodeCount: 1
-  # ServiceAccount name used in monitoring namespace and in each monitored namespace (for cross-namespace RBAC).
-  serviceAccountName: eck-monitoring-sa
+  # ServiceAccount names for cross-namespace RBAC (when enforceRBAC is true).
+  serviceAccountName: eck-monitoring-sa   # Used by monitoring ES to access monitored clusters (elastic1, elastic2).
+  monitoredServiceAccountName: eck-monitored-sa  # Used by monitored ES to access the monitoring cluster.

@@ -23,9 +23,8 @@ spec:
           replication:
             names: ["*"]
     {{- end }}
-  {{- if $.Values.enforceRBAC }}
-  # Required when operator runs with --enforce-rbac-on-refs (cross-namespace ref to monitoring ES).
-  serviceAccountName: {{ .Values.monitoringCluster.serviceAccountName }}
+  {{- if and $.Values.enforceRBAC $.Values.monitoringCluster }}
+  serviceAccountName: {{ ($.Values.monitoringCluster.serviceAccountName) | default "eck-monitoring-sa" }}
   {{- end }}
   nodeSets:
     - name: default
