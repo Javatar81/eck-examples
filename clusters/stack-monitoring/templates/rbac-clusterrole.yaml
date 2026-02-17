@@ -1,0 +1,19 @@
+{{- if .Values.enforceRBAC }}
+# ClusterRole required for cross-namespace associations when operator runs with --enforce-rbac-on-refs.
+# RoleBindings in the monitoring namespace grant this to ServiceAccounts from elastic1/elastic2.
+# See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/restrict-cross-namespace-resource-associations
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: elasticsearch-association
+  labels:
+    app.kubernetes.io/name: stack-monitoring
+rules:
+  - apiGroups:
+      - elasticsearch.k8s.elastic.co
+    resources:
+      - elasticsearches
+    verbs:
+      - get
+{{- end }}
