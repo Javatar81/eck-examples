@@ -19,3 +19,5 @@ monitoringCluster:
   elasticsearchName: monitoring
   kibanaName: kibana
   nodeCount: 1
+  # ServiceAccount name used in monitoring namespace and in each monitored namespace (for cross-namespace RBAC).
+  serviceAccountName: eck-monitoring-sa
