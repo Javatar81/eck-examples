@@ -2,7 +2,7 @@
 {{- if .Values.monitoringCluster }}
 # ---
 # NetworkPolicies: allow the monitoring cluster to communicate with monitored clusters as remote clusters for cross-cluster search (CCS).
-# Uses the remote cluster server port 9443 (default with API key auth). Enable with generateStackMonitoringPolicies: true.
+# Uses the remote cluster server port 9200. Enable with generateRenoteClustersSearchPolicies: true.
 # ---
 
 # 1) In the monitoring namespace: allow egress from monitoring Elasticsearch to each monitored cluster on port 9443 (remote cluster).
@@ -32,7 +32,7 @@ spec:
                 {{- end }}
       ports:
         - protocol: TCP
-          port: 9443
+          port: 9200
     # Allow DNS to resolve monitored cluster services.
     - to:
         - namespaceSelector: {}
@@ -65,7 +65,7 @@ spec:
                 values: [{{ $.Values.monitoringCluster.namespace | quote }}]
       ports:
         - protocol: TCP
-          port: 9443
+          port: 9200
 {{- end }}
 {{- end }}
 {{- end }}
