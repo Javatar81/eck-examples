@@ -56,7 +56,7 @@ spec:
             matchExpressions:
               - key: kubernetes.io/metadata.name
                 operator: In
-                values: {{ $.Values.monitoringCluster.namespace | quote }}
+                values: [{{ $.Values.monitoringCluster.namespace | quote }}]
       ports:
         - protocol: TCP
           port: 9200
