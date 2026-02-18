@@ -1,0 +1,14 @@
+eck-operator:
+  managedNamespaces: ["elastic1", "elastic2"]
+  createClusterScopedResources: true
+  refs:
+    enforceRBAC: true
+  webhook:
+    enabled: true
+    namespaceSelector:
+      matchExpressions:
+        - key: "eck.k8s.elastic.co/tenant"
+          operator: In
+          values: ["elastic1", "elastic2"]
+  softMultiTenancy:
+    enabled: true
