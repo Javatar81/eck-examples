@@ -1,6 +1,9 @@
 # Stack monitoring: 2 monitored ES clusters + 1 monitoring ES + Kibana
 # https://www.elastic.co/docs/deploy-manage/monitor/stack-monitoring/eck-stack-monitoring
 
+# When true, create NetworkPolicies allowing metricbeats in monitored clusters to push metrics/logs to the monitoring cluster (port 9200).
+generateStackMonitoringPolicies: false
+
 version: "9.3.0"
 storageSize: 30Gi
 

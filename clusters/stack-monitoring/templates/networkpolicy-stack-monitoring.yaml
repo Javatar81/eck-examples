@@ -1,0 +1,64 @@
+{{- if .Values.generateStackMonitoringPolicies }}
+{{- if .Values.monitoringCluster }}
+# ---
+# NetworkPolicies: allow metricbeats in monitored Elasticsearch clusters to push metrics/logs to the monitoring cluster (Elasticsearch HTTP 9200).
+# Enable with: generateStackMonitoringPolicies: true (e.g. -f values.yaml -f values-stack-monitoring-policies.yaml).
+# ---
+
+# 1) In the monitoring namespace: allow ingress from monitored clusters (Elasticsearch pods with metricbeat) on port 9200.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitored-clusters-ingress
+  namespace: {{ .Values.monitoringCluster.namespace }}
+  labels:
+    app.kubernetes.io/name: stack-monitoring
+spec:
+  podSelector:
+    matchLabels:
+      elasticsearch.k8s.elastic.co/cluster-name: {{ .Values.monitoringCluster.elasticsearchName }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              stack-monitoring.eck.k8s.elastic.co/role: monitored
+      ports:
+        - protocol: TCP
+          port: 9200
+
+# 2) In each monitored namespace: allow egress from Elasticsearch pods (metricbeat) to the monitoring cluster on port 9200.
+{{- range .Values.monitoredClusters }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-monitoring-cluster
+  namespace: {{ .namespace }}
+  labels:
+    app.kubernetes.io/name: stack-monitoring
+spec:
+  podSelector:
+    matchLabels:
+      elasticsearch.k8s.elastic.co/cluster-name: {{ .name }}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              stack-monitoring.eck.k8s.elastic.co/role: monitoring
+      ports:
+        - protocol: TCP
+          port: 9200
+    # Allow DNS so that the monitoring cluster's Elasticsearch service can be resolved.
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+{{- end }}
+{{- end }}
+{{- end }}

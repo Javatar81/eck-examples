@@ -1,0 +1,4 @@
+# Enable NetworkPolicies so metricbeats in monitored clusters can push to the monitoring cluster.
+# Use with: -f values.yaml -f values-enforce-rbac.yaml -f values-stack-monitoring-policies.yaml
+# Or set generateStackMonitoringPolicies: true in the ArgoCD Application helm.values.
+generateStackMonitoringPolicies: true

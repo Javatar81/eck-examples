@@ -6,6 +6,7 @@ metadata:
   name: {{ .namespace }}
   labels:
     app.kubernetes.io/name: stack-monitoring
+    stack-monitoring.eck.k8s.elastic.co/role: monitored
 {{- end }}
 ---
 apiVersion: v1
@@ -14,3 +15,4 @@ metadata:
   name: {{ .Values.monitoringCluster.namespace }}
   labels:
     app.kubernetes.io/name: stack-monitoring
+    stack-monitoring.eck.k8s.elastic.co/role: monitoring
