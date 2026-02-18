@@ -1,8 +1,10 @@
 # Stack monitoring: 2 monitored ES clusters + 1 monitoring ES + Kibana
 # https://www.elastic.co/docs/deploy-manage/monitor/stack-monitoring/eck-stack-monitoring
 
-# When true, create NetworkPolicies allowing metricbeats in monitored clusters to push metrics/logs to the monitoring cluster (port 9200).
+# When true, create NetworkPolicies for: (1) metricbeats in monitored clusters → monitoring (9200), (2) monitoring → monitored for cross-cluster search (9443).
 generateStackMonitoringPolicies: false
+# When true, create NetworkPolicies so the monitoring cluster can communicate with monitored clusters as remote clusters for cross-cluster search (CCS).
+generateRenoteClustersSearchPolicies: false
 
 version: "9.3.0"
 storageSize: 30Gi

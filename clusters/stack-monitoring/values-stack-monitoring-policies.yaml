@@ -2,3 +2,7 @@
 # Use with: -f values.yaml -f values-enforce-rbac.yaml -f values-stack-monitoring-policies.yaml
 # Or set generateStackMonitoringPolicies: true in the ArgoCD Application helm.values.
 generateStackMonitoringPolicies: true
+# When true, create NetworkPolicies so the monitoring cluster can communicate with monitored clusters as remote clusters for cross-cluster search (CCS).
+# Use with: -f values.yaml -f values-enforce-rbac.yaml -f values-stack-monitoring-policies.yaml
+# Or set generateRenoteClustersSearchPolicies: true in the ArgoCD Application helm.values.
+generateRenoteClustersSearchPolicies: true

@@ -1,0 +1,71 @@
+{{- if .Values.generateRenoteClustersSearchPolicies }}
+{{- if .Values.monitoringCluster }}
+# ---
+# NetworkPolicies: allow the monitoring cluster to communicate with monitored clusters as remote clusters for cross-cluster search (CCS).
+# Uses the remote cluster server port 9443 (default with API key auth). Enable with generateStackMonitoringPolicies: true.
+# ---
+
+# 1) In the monitoring namespace: allow egress from monitoring Elasticsearch to each monitored cluster on port 9443 (remote cluster).
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-monitored-clusters-ccs
+  namespace: {{ .Values.monitoringCluster.namespace }}
+  labels:
+    app.kubernetes.io/name: stack-monitoring
+spec:
+  podSelector:
+    matchLabels:
+      elasticsearch.k8s.elastic.co/cluster-name: {{ .Values.monitoringCluster.elasticsearchName }}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                {{- range .Values.monitoredClusters }}
+                - {{ .namespace | quote }}
+                {{- end }}
+      ports:
+        - protocol: TCP
+          port: 9443
+    # Allow DNS to resolve monitored cluster services.
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+
+# 2) In each monitored namespace: allow ingress from the monitoring cluster (Elasticsearch) on port 9443 (remote cluster server).
+{{- range .Values.monitoredClusters }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-cluster-ingress-ccs
+  namespace: {{ .namespace }}
+  labels:
+    app.kubernetes.io/name: stack-monitoring
+spec:
+  podSelector:
+    matchLabels:
+      elasticsearch.k8s.elastic.co/cluster-name: {{ .name }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [{{ $.Values.monitoringCluster.namespace | quote }}]
+      ports:
+        - protocol: TCP
+          port: 9443
+{{- end }}
+{{- end }}
+{{- end }}
