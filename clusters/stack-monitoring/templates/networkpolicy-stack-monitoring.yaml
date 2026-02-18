@@ -23,8 +23,13 @@ spec:
   ingress:
     - from:
         - namespaceSelector:
-            matchLabels:
-              stack-monitoring.eck.k8s.elastic.co/role: monitored
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                {{- range .Values.monitoredClusters }}
+                - {{ .namespace | quote }}
+                {{- end }}
       ports:
         - protocol: TCP
           port: 9200
@@ -48,8 +53,10 @@ spec:
   egress:
     - to:
         - namespaceSelector:
-            matchLabels:
-              stack-monitoring.eck.k8s.elastic.co/role: monitoring
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: {{ .Values.monitoringCluster.namespace | quote }}
       ports:
         - protocol: TCP
           port: 9200
