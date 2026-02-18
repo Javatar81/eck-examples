@@ -17,7 +17,8 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      elasticsearch.k8s.elastic.co/cluster-name: {{ .Values.monitoringCluster.elasticsearchName }}
+      # ALlow all kibana pods to egress to the monitored clusters
+      common.k8s.elastic.co/type: kibana
   policyTypes:
     - Egress
   egress:
