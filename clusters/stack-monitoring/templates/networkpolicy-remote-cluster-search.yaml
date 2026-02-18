@@ -2,7 +2,7 @@
 {{- if .Values.monitoringCluster }}
 # ---
 # NetworkPolicies: allow the monitoring cluster to communicate with monitored clusters as remote clusters for cross-cluster search (CCS).
-# Uses the remote cluster server port 9200. Enable with generateRenoteClustersSearchPolicies: true.
+# Uses the remote cluster server port 9443 (default with API key auth). Enable with generateRenoteClustersSearchPolicies: true.
 # ---
 
 # 1) In the monitoring namespace: allow egress from monitoring Elasticsearch to each monitored cluster on port 9443 (remote cluster).
@@ -17,8 +17,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      # ALlow all kibana pods to egress to the monitored clusters
-      common.k8s.elastic.co/type: kibana
+      elasticsearch.k8s.elastic.co/cluster-name: {{ .Values.monitoringCluster.elasticsearchName }}
   policyTypes:
     - Egress
   egress:
@@ -33,7 +32,7 @@ spec:
                 {{- end }}
       ports:
         - protocol: TCP
-          port: 9200
+          port: 9443
     # Allow DNS to resolve monitored cluster services.
     - to:
         - namespaceSelector: {}
@@ -66,7 +65,7 @@ spec:
                 values: [{{ $.Values.monitoringCluster.namespace | quote }}]
       ports:
         - protocol: TCP
-          port: 9200
+          port: 9443
 {{- end }}
 {{- end }}
 {{- end }}
