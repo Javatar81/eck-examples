@@ -50,6 +50,19 @@ ArgoCD will sync the **operator/eck-operator** chart (which wraps the official e
 
 **Enterprise trial license:** To enable the trial license, either set `trialLicense.enabled: true` in `operator/eck-operator/values.yaml`, or add `values-trial.yaml` to the Application's `helm.valueFiles`. When enabled, the chart creates the `eck-trial-license` Secret in `elastic-system` (label `license.k8s.elastic.co/type: enterprise_trial`, annotation `elastic.co/eula: accepted`).
 
+**Multi-tenancy:** If `values-multi-tenancy.yaml` is included in the Application's `helm.valueFiles` (e.g. in `apps/application-operator.yaml`), you must set the API server IP used by the operator. Add a `valuesObject` under `spec.source.helm` with `eck-operator.kubeAPIServerIP` and replace the value with your cluster's Kubernetes API server service IP:
+
+```yaml
+helm:
+  valuesObject:
+    eck-operator:
+      kubeAPIServerIP: w.x.y.z   # Replace with your API server service IP
+  valueFiles:
+    - values-multi-tenancy.yaml
+```
+
+To get your API server service IP: `kubectl get svc kubernetes -n default -o jsonpath='{.spec.clusterIP}'`.
+
 ### 2. Point cluster Applications to your Git repo
 
 Edit the cluster Applications and set `spec.source.repoURL` and `spec.source.targetRevision` to your Git repository:
