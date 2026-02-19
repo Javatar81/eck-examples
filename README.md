@@ -108,6 +108,8 @@ The **stack-monitoring** Application deploys a dedicated [Stack Monitoring](http
 
 The two monitored clusters have **remote cluster server** enabled; the monitoring cluster is configured with **remote clusters** (API key) so you can run [Cross-Cluster Search (CCS)](https://www.elastic.co/docs/deploy-manage/remote-clusters/eck-remote-clusters) from the monitoring Kibana against `elastic1` and `elastic2`.
 
+For clusters that enforce NetworkPolicies (e.g. default-deny), the stack-monitoring chart can generate policies so that metrics/logs and CCS traffic are allowed between namespaces. See [NetworkPolicies](network-policies.md) for a description and diagrams of the deployed policies and why they are needed.
+
 Deploy after the ECK operator is running:
 
 ```bash
@@ -160,6 +162,7 @@ kubectl -n elastic-monitoring get secret monitoring-es-elastic-user -o=jsonpath=
 
 ## References
 
+- [NetworkPolicies](network-policies.md) — Stack monitoring NetworkPolicies (flow diagrams, ports, and rationale)
 - [Install ECK using a Helm chart](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart)
 - [Manage deployments (ECK)](https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/manage-deployments)
 - [Enable stack monitoring on ECK](https://www.elastic.co/docs/deploy-manage/monitor/stack-monitoring/eck-stack-monitoring)
