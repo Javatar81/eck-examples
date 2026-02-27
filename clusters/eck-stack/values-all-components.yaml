@@ -1,0 +1,42 @@
+# Overrides for full stack: Elasticsearch, Kibana, Fleet Server, and APM Server.
+# Use with: -f values.yaml -f values-all-components.yaml
+# See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/managing-deployments-using-helm-chart
+
+eck-stack:
+  # Elasticsearch and Kibana are enabled in base values.yaml; ensure Fleet/APM packages for Kibana
+  eck-kibana:
+    spec:
+      config:
+        xpack.fleet.packages:
+          - name: apm
+            version: latest
+
+  eck-fleet-server:
+    enabled: true
+    fullnameOverride: fleet-server
+    deployment:
+      replicas: 1
+      podTemplate:
+        spec:
+          serviceAccountName: fleet-server
+          automountServiceAccountToken: true
+    policyID: eck-fleet-server
+    kibanaRef:
+      name: kibana
+    elasticsearchRefs:
+      - name: elasticsearch
+
+  eck-apm-server:
+    enabled: true
+    count: 1
+    elasticsearchRef:
+      name: elasticsearch
+    kibanaRef:
+      name: kibana
+    http:
+      service:
+        spec:
+          ports:
+            - name: http
+              port: 8200
+              targetPort: 8200
