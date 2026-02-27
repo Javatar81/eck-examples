@@ -1,0 +1,31 @@
+# ArgoCD Application: Elasticsearch + Kibana + Fleet Server + APM Server
+# Deploy after the eck-operator Application is synced.
+# Set spec.source.repoURL to your Git repo URL and spec.source.targetRevision to branch/tag.
+# See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/managing-deployments-using-helm-chart
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eck-stack-all-components
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Javatar81/eck-examples
+    path: clusters/eck-stack
+    targetRevision: main
+    helm:
+      releaseName: eck-stack-all-components
+      valueFiles:
+        - values.yaml
+        - values-all-components.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: elastic
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

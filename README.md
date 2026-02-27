@@ -11,6 +11,7 @@ Deployment artifacts for [Elastic Cloud on Kubernetes (ECK)](https://www.elastic
 │   ├── application-operator.yaml       # ArgoCD Application for ECK operator (wrapper chart)
 │   ├── application-single-node.yaml
 │   ├── application-multi-node.yaml
+│   ├── application-all-components.yaml
 │   └── application-stack-monitoring.yaml
 ├── operator/
 │   └── eck-operator/             # Wrapper around official eck-operator chart
@@ -24,7 +25,8 @@ Deployment artifacts for [Elastic Cloud on Kubernetes (ECK)](https://www.elastic
     │   ├── Chart.yaml
     │   ├── values.yaml
     │   ├── values-single-node.yaml
-    │   └── values-multi-node.yaml
+    │   ├── values-multi-node.yaml
+    │   └── values-all-components.yaml
     └── stack-monitoring/         # Raw ECK CRs (elastic1, elastic2, elastic-monitoring)
         ├── Chart.yaml
         ├── values.yaml
