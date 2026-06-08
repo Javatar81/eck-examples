@@ -25,18 +25,3 @@ eck-stack:
       name: kibana
     elasticsearchRefs:
       - name: elasticsearch
-
-  eck-apm-server:
-    enabled: true
-    count: 1
-    elasticsearchRef:
-      name: elasticsearch
-    kibanaRef:
-      name: kibana
-    http:
-      service:
-        spec:
-          ports:
-            - name: http
-              port: 8200
-              targetPort: 8200
