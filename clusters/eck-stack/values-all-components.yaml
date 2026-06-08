@@ -1,56 +1,34 @@
-# Overrides for full stack: Elasticsearch, Kibana, Fleet Server, and APM Server.
-# Use with: -f values.yaml -f values-all-components.yaml
+# Overrides for full stack: Elasticsearch, Kibana, Fleet Server, Elastic Agent, and APM Server.
+# Use with: -f values.yaml -f values-fleet.yaml -f values-all-components.yaml
 # See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/managing-deployments-using-helm-chart
 
-fleetAgentRBAC:
-  enabled: true
-
 eck-stack:
-  # Elasticsearch and Kibana are enabled in base values.yaml; ensure Fleet/APM packages for Kibana
   eck-kibana:
     spec:
       config:
         xpack.fleet.packages:
-        - name: fleet_server
-          version: latest
-        - name: elastic_agent
-          version: latest
-        - name: kubernetes
-          version: latest
-        - name: apm
-          version: latest
-        xpack.fleet.agentPolicies:
-        - name: Fleet Server on ECK policy
-          id: eck-fleet-server
-          namespace: default
-          is_managed: true
-          monitoring_enabled:
-            - logs
-            - metrics
-          package_policies:
-            - name: fleet_server-1
-              id: fleet_server-1
-              package:
-                name: fleet_server
-            - name: kubernetes-1
-              id: kubernetes-1
-              package:
-                name: kubernetes
-  eck-fleet-server:
+          - name: system
+            version: latest
+          - name: elastic_agent
+            version: latest
+          - name: fleet_server
+            version: latest
+          - name: kubernetes
+            version: latest
+          - name: apm
+            version: latest
+
+  eck-apm-server:
     enabled: true
-    fullnameOverride: fleet-server
-    # RBAC is created by wrapper chart templates when fleetAgentRBAC.enabled is true.
-    serviceAccount: null
-    clusterRole: null
-    clusterRoleBinding: null
-    deployment:
-      replicas: 1
-      podTemplate:
-        spec:
-          serviceAccountName: fleet-server
-          automountServiceAccountToken: true
-    policyID: eck-fleet-server
+    count: 1
+    elasticsearchRef:
+      name: elasticsearch
     kibanaRef:
       name: kibana
-    elasticsearchRefs:
-      - name: elasticsearch
+    http:
+      service:
+        spec:
+          ports:
+            - name: http
+              port: 8200
+              targetPort: 8200

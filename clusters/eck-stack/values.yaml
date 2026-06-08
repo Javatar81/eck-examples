@@ -3,8 +3,12 @@
 # Values are under "eck-stack" so the dependency chart receives them.
 
 # Wrapper-chart RBAC for Fleet Server and Elastic Agent (Kubernetes integration).
-# When enabled, templates in templates/rbac-fleet-agents.yaml create ClusterRoles and
-# bindings; disable duplicate RBAC on the eck-fleet-server / eck-agent subcharts.
+# Enabled automatically via values-fleet.yaml when Fleet Server is deployed.
+# Templates in templates/rbac-fleet-agents.yaml create ClusterRoles and bindings;
+# disable duplicate RBAC on the eck-fleet-server / eck-agent subcharts via serviceAccount: null.
+fleet:
+  namespace: elastic
+
 fleetAgentRBAC:
   enabled: false
   fleetServer:
@@ -46,7 +50,8 @@ eck-stack:
     spec:
       count: 1
 
-  # Disable other stack components
+  # Disable other stack components. Use values-fleet.yaml to enable Fleet Server and
+  # Elastic Agent (Kubernetes integration) together with required RBAC.
   eck-agent:
     enabled: false
   eck-fleet-server:

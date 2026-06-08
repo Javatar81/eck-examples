@@ -1,0 +1,100 @@
+# Fleet Server + Elastic Agent (Kubernetes integration).
+# Use with: -f values.yaml -f values-fleet.yaml
+# When Fleet Server is enabled, an Elastic Agent DaemonSet is deployed and enrolled via Fleet Server.
+# Set fleet.namespace to match the Helm release namespace if not elastic.
+# See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/managing-deployments-using-helm-chart
+
+fleet:
+  namespace: elastic
+
+fleetAgentRBAC:
+  enabled: true
+
+eck-stack:
+  eck-kibana:
+    spec:
+      config:
+        xpack.fleet.agents.elasticsearch.hosts:
+          - "https://elasticsearch-es-http.elastic.svc:9200"
+        xpack.fleet.agents.fleet_server.hosts:
+          - "https://fleet-server-agent-http.elastic.svc:8220"
+        xpack.fleet.packages:
+          - name: system
+            version: latest
+          - name: elastic_agent
+            version: latest
+          - name: fleet_server
+            version: latest
+          - name: kubernetes
+            version: latest
+        xpack.fleet.agentPolicies:
+          - name: Fleet Server on ECK policy
+            id: eck-fleet-server
+            namespace: default
+            is_managed: true
+            monitoring_enabled:
+              - logs
+              - metrics
+            package_policies:
+              - name: fleet_server-1
+                id: fleet_server-1
+                package:
+                  name: fleet_server
+          - name: Elastic Agent on ECK policy
+            id: eck-agent
+            namespace: default
+            is_managed: true
+            monitoring_enabled:
+              - logs
+              - metrics
+            unenroll_timeout: 900
+            package_policies:
+              - name: system-1
+                id: system-1
+                package:
+                  name: system
+              - name: kubernetes-1
+                id: kubernetes-1
+                package:
+                  name: kubernetes
+
+  eck-fleet-server:
+    enabled: true
+    fullnameOverride: fleet-server
+    serviceAccount: null
+    clusterRole: null
+    clusterRoleBinding: null
+    deployment:
+      replicas: 1
+      podTemplate:
+        spec:
+          serviceAccountName: fleet-server
+          automountServiceAccountToken: true
+    policyID: eck-fleet-server
+    kibanaRef:
+      name: kibana
+    elasticsearchRefs:
+      - name: elasticsearch
+
+  eck-agent:
+    enabled: true
+    fullnameOverride: elastic-agent
+    serviceAccount: null
+    clusterRole: null
+    clusterRoleBinding: null
+    policyID: eck-agent
+    mode: fleet
+    kibanaRef:
+      name: kibana
+    elasticsearchRefs: []
+    fleetServerRef:
+      name: fleet-server
+    daemonSet:
+      podTemplate:
+        spec:
+          serviceAccountName: elastic-agent
+          hostNetwork: true
+          dnsPolicy: ClusterFirstWithHostNet
+          automountServiceAccountToken: true
+          securityContext:
+            runAsUser: 0
