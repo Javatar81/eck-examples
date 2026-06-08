@@ -1,0 +1,179 @@
+{{- if .Values.fleetAgentRBAC.enabled }}
+{{- $namespace := .Release.Namespace }}
+{{- $labels := include "eck-stack-wrapper.labels" . | nindent 4 }}
+
+{{- if .Values.fleetAgentRBAC.fleetServer.enabled }}
+{{- $fsName := .Values.fleetAgentRBAC.fleetServer.serviceAccountName }}
+{{- $fsRole := .Values.fleetAgentRBAC.fleetServer.clusterRoleName }}
+# RBAC for Fleet Server. Required for Fleet Server coordination with Kubernetes APIs.
+# See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/configuration-fleet
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $fsName }}
+  namespace: {{ $namespace }}
+  labels:
+{{ $labels }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $fsRole }}
+  labels:
+{{ $labels }}
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - namespaces
+      - nodes
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups: ["apps"]
+    resources:
+      - replicasets
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups: ["coordination.k8s.io"]
+    resources:
+      - leases
+    verbs:
+      - get
+      - create
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $fsRole }}
+  labels:
+{{ $labels }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $fsName }}
+    namespace: {{ $namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ $fsRole }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+
+{{- if and .Values.fleetAgentRBAC.elasticAgent.enabled (index .Values "eck-stack" "eck-agent" "enabled") }}
+{{- $eaName := .Values.fleetAgentRBAC.elasticAgent.serviceAccountName }}
+{{- $eaRole := .Values.fleetAgentRBAC.elasticAgent.clusterRoleName }}
+# RBAC for Elastic Agent DaemonSet with Kubernetes integration.
+# See: https://github.com/elastic/cloud-on-k8s/blob/main/config/recipes/elastic-agent/fleet-kubernetes-integration.yaml
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $eaName }}
+  namespace: {{ $namespace }}
+  labels:
+{{ $labels }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $eaRole }}
+  labels:
+{{ $labels }}
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - nodes
+      - namespaces
+      - events
+      - services
+      - configmaps
+      - persistentvolumes
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups: ["events.k8s.io"]
+    resources:
+      - events
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups: ["coordination.k8s.io"]
+    resources:
+      - leases
+    verbs:
+      - get
+      - create
+      - update
+  - nonResourceURLs:
+      - "/metrics"
+    verbs:
+      - get
+  - apiGroups: ["extensions"]
+    resources:
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: ["apps"]
+    resources:
+      - statefulsets
+      - deployments
+      - replicasets
+      - daemonsets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [""]
+    resources:
+      - nodes/stats
+    verbs:
+      - get
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: ["storage.k8s.io"]
+    resources:
+      - storageclasses
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $eaRole }}
+  labels:
+{{ $labels }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $eaName }}
+    namespace: {{ $namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ $eaRole }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+{{- end }}

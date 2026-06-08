@@ -2,6 +2,20 @@
 # Use with a profile: -f values.yaml -f values-single-node.yaml | values-multi-node.yaml
 # Values are under "eck-stack" so the dependency chart receives them.
 
+# Wrapper-chart RBAC for Fleet Server and Elastic Agent (Kubernetes integration).
+# When enabled, templates in templates/rbac-fleet-agents.yaml create ClusterRoles and
+# bindings; disable duplicate RBAC on the eck-fleet-server / eck-agent subcharts.
+fleetAgentRBAC:
+  enabled: false
+  fleetServer:
+    enabled: true
+    serviceAccountName: fleet-server
+    clusterRoleName: fleet-server
+  elasticAgent:
+    enabled: true
+    serviceAccountName: elastic-agent
+    clusterRoleName: elastic-agent
+
 eck-stack:
   eck-elasticsearch:
     enabled: true

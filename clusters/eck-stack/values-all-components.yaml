@@ -2,6 +2,9 @@
 # Use with: -f values.yaml -f values-all-components.yaml
 # See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/managing-deployments-using-helm-chart
 
+fleetAgentRBAC:
+  enabled: true
+
 eck-stack:
   # Elasticsearch and Kibana are enabled in base values.yaml; ensure Fleet/APM packages for Kibana
   eck-kibana:
@@ -36,6 +39,10 @@ eck-stack:
   eck-fleet-server:
     enabled: true
     fullnameOverride: fleet-server
+    # RBAC is created by wrapper chart templates when fleetAgentRBAC.enabled is true.
+    serviceAccount: null
+    clusterRole: null
+    clusterRoleBinding: null
     deployment:
       replicas: 1
       podTemplate:
