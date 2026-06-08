@@ -8,9 +8,25 @@ eck-stack:
     spec:
       config:
         xpack.fleet.packages:
-          - name: apm
-            version: latest
-
+        - name: fleet_server
+          version: latest
+        - name: elastic_agent
+          version: latest
+        - name: apm
+          version: latest
+        xpack.fleet.agentPolicies:
+        - name: Fleet Server on ECK policy
+          id: eck-fleet-server
+          namespace: default
+          is_managed: true
+          monitoring_enabled:
+            - logs
+            - metrics
+          package_policies:
+            - name: fleet_server-1
+              id: fleet_server-1
+              package:
+                name: fleet_server
   eck-fleet-server:
     enabled: true
     fullnameOverride: fleet-server
