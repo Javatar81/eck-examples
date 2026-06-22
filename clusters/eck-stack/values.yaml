@@ -24,7 +24,7 @@ eck-stack:
   eck-elasticsearch:
     enabled: true
     fullnameOverride: elasticsearch
-    version: "9.3.0"
+    version: "9.4.2"
     nodeSets:
       - name: default
         count: 1
@@ -44,7 +44,7 @@ eck-stack:
   eck-kibana:
     enabled: true
     fullnameOverride: kibana
-    version: "9.3.0"
+    version: "9.4.2"
     elasticsearchRef:
       name: elasticsearch
     spec:
