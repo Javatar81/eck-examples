@@ -69,9 +69,6 @@ eck-stack:
                     vars:
                       grpc_endpoint: 0.0.0.0:4317
                       http_endpoint: 0.0.0.0:4318
-                      enable_basic_auth: false
-                      enable_bearer_auth: false
-                      enable_oidc_auth: false
 
   eck-fleet-server:
     enabled: true
