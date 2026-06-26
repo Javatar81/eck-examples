@@ -64,8 +64,18 @@ eck-stack:
                 package:
                   name: otlp_input_otel
                 inputs:
-                  otlpreceiver-otelcol:
+                  - type: otelcol
+                    policy_template: otlpreceiver
                     enabled: true
+                    streams:
+                      - data_stream:
+                          dataset: otlp_input_otel.otlpreceiver
+                        enabled: true
+                        vars:
+                          - name: grpc_endpoint
+                            value: 0.0.0.0:4317
+                          - name: http_endpoint
+                            value: 0.0.0.0:4318
 
   eck-fleet-server:
     enabled: true
