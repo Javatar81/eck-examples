@@ -27,6 +27,8 @@ eck-stack:
             version: latest
           - name: kubernetes
             version: latest
+          - name: otlp_input_otel
+            version: latest
         xpack.fleet.agentPolicies:
           - name: Fleet Server on ECK policy
             id: eck-fleet-server
@@ -57,6 +59,16 @@ eck-stack:
                 id: kubernetes-1
                 package:
                   name: kubernetes
+              - name: otlp-1
+                id: otlp-1
+                package:
+                  name: otlp_input_otel
+                inputs:
+                  otlpreceiver-otelcol:
+                    enabled: true
+                    vars:
+                      grpc_endpoint: 0.0.0.0:4317
+                      http_endpoint: 0.0.0.0:4318
 
   eck-fleet-server:
     enabled: true
