@@ -66,9 +66,6 @@ eck-stack:
                 inputs:
                   otlpreceiver-otelcol:
                     enabled: true
-                    vars:
-                      grpc_endpoint: 0.0.0.0:4317
-                      http_endpoint: 0.0.0.0:4318
 
   eck-fleet-server:
     enabled: true
