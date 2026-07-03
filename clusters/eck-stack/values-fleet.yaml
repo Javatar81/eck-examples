@@ -63,12 +63,23 @@ eck-stack:
                 id: otlp-1
                 package:
                   name: otlp_input_otel
+                # Array format is required for OTel input packages. Stream-level vars
+                # must be frozen so Fleet updates an existing otlp-1 policy on restart.
                 inputs:
-                  otlpreceiver-otelcol:
+                  - type: otelcol
+                    policy_template: otlpreceiver
                     enabled: true
-                    vars:
-                      grpc_endpoint: 0.0.0.0:4317
-                      http_endpoint: 0.0.0.0:4318
+                    streams:
+                      - data_stream:
+                          dataset: otlp_input_otel.otlpreceiver
+                        enabled: true
+                        vars:
+                          - name: grpc_endpoint
+                            value: 0.0.0.0:4317
+                            frozen: true
+                          - name: http_endpoint
+                            value: 0.0.0.0:4318
+                            frozen: true
   eck-fleet-server:
     enabled: true
     fullnameOverride: fleet-server
