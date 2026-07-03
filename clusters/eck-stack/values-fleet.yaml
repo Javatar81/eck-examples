@@ -63,11 +63,11 @@ eck-stack:
                 id: otlp-1
                 package:
                   name: otlp_input_otel
-                # Array format is required for OTel input packages. Stream-level vars
-                # must be frozen so Fleet updates an existing otlp-1 policy on restart.
+                # kibana.yml only accepts array-format inputs (not the object-map format
+                # used by system/kubernetes). Vars live on the stream; frozen is required
+                # to update an existing managed otlp-1 policy on Kibana restart.
                 inputs:
                   - type: otelcol
-                    policy_template: otlpreceiver
                     enabled: true
                     streams:
                       - data_stream:
