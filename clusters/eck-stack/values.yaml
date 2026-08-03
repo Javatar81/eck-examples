@@ -20,6 +20,13 @@ fleetAgentRBAC:
     serviceAccountName: elastic-agent
     clusterRoleName: elastic-agent
 
+# Opt-in Kubernetes audit log collection (values-fleet.yaml / kibana-fleet.yaml).
+# Enable with: --set kubernetesAuditLogs.enabled=true
+kubernetesAuditLogs:
+  enabled: false
+  paths:
+    - /var/log/kubernetes/kube-apiserver-audit.log
+
 eck-stack:
   eck-elasticsearch:
     enabled: true

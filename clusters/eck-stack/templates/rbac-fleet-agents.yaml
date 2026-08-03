@@ -70,7 +70,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
 
-{{- if and .Values.fleetAgentRBAC.elasticAgent.enabled (index .Values "eck-stack" "eck-agent" "enabled") }}
+{{- if and .Values.fleetAgentRBAC.enabled .Values.fleetAgentRBAC.elasticAgent.enabled (index .Values "eck-stack" "eck-agent" "enabled") }}
 {{- $eaName := .Values.fleetAgentRBAC.elasticAgent.serviceAccountName }}
 {{- $eaRole := .Values.fleetAgentRBAC.elasticAgent.clusterRoleName }}
 # RBAC for Elastic Agent DaemonSet with Kubernetes integration.

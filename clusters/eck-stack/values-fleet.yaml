@@ -2,6 +2,11 @@
 # Use with: -f values.yaml -f values-fleet.yaml
 # When Fleet Server is enabled, an Elastic Agent DaemonSet is deployed and enrolled via Fleet Server.
 # Set fleet.namespace to match the Helm release namespace if not elastic.
+#
+# Collect Kubernetes audit logs from local files (kubernetes.audit_logs / audit-logs-filestream):
+#   --set kubernetesAuditLogs.enabled=true
+# Requires the API server to write audit logs under kubernetesAuditLogs.paths (hostPath-mounted).
+# See: https://www.elastic.co/docs/reference/integrations/kubernetes/audit-logs
 # See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/managing-deployments-using-helm-chart
 
 fleet:
@@ -10,9 +15,23 @@ fleet:
 fleetAgentRBAC:
   enabled: true
 
+# Opt-in: Collect Kubernetes audit logs from local files in the Kubernetes integration.
+kubernetesAuditLogs:
+  enabled: false
+  paths:
+    - /var/log/kubernetes/kube-apiserver-audit.log
+
 eck-stack:
+  # Disabled here; templates/kibana-fleet.yaml renders Kibana so agentPolicies can
+  # honor kubernetesAuditLogs.enabled. Hosts/packages below are still consumed by that template.
   eck-kibana:
+    enabled: false
+    fullnameOverride: kibana
+    version: "9.4.2"
+    elasticsearchRef:
+      name: elasticsearch
     spec:
+      count: 1
       config:
         xpack.fleet.agents.elasticsearch.hosts:
           - "https://elasticsearch-es-http.elastic.svc:9200"
@@ -29,57 +48,6 @@ eck-stack:
             version: latest
           - name: otlp_input_otel
             version: latest
-        xpack.fleet.agentPolicies:
-          - name: Fleet Server on ECK policy
-            id: eck-fleet-server
-            namespace: default
-            is_managed: true
-            monitoring_enabled:
-              - logs
-              - metrics
-            package_policies:
-              - name: fleet_server-1
-                id: fleet_server-1
-                package:
-                  name: fleet_server
-          - name: Elastic Agent on ECK policy
-            id: eck-agent
-            namespace: default
-            is_managed: true
-            monitoring_enabled:
-              - logs
-              - metrics
-            unenroll_timeout: 900
-            package_policies:
-              - name: system-1
-                id: system-1
-                package:
-                  name: system
-              - name: kubernetes-1
-                id: kubernetes-1
-                package:
-                  name: kubernetes
-              - name: otlp-1
-                id: otlp-1
-                package:
-                  name: otlp_input_otel
-                # kibana.yml only accepts array-format inputs (not the object-map format
-                # used by system/kubernetes). Vars live on the stream; frozen is required
-                # to update an existing managed otlp-1 policy on Kibana restart.
-                inputs:
-                  - type: otelcol
-                    enabled: true
-                    streams:
-                      - data_stream:
-                          dataset: otlp_input_otel.otlpreceiver
-                        enabled: true
-                        vars:
-                          - name: grpc_endpoint
-                            value: 0.0.0.0:4317
-                            frozen: true
-                          - name: http_endpoint
-                            value: 0.0.0.0:4318
-                            frozen: true
   eck-fleet-server:
     enabled: true
     fullnameOverride: fleet-server
@@ -120,3 +88,19 @@ eck-stack:
           automountServiceAccountToken: true
           securityContext:
             runAsUser: 0
+          # Audit logs are written on control-plane nodes (e.g. kind).
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+          # Mount node logs so audit_logs (and container logs) are readable.
+          volumes:
+            - name: varlog
+              hostPath:
+                path: /var/log
+          containers:
+            - name: agent
+              volumeMounts:
+                - name: varlog
+                  mountPath: /var/log
+                  readOnly: true

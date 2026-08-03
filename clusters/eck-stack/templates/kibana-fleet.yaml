@@ -1,0 +1,100 @@
+{{- /*
+  Renders Kibana when Fleet Server is enabled and the eck-kibana subchart is disabled.
+  Allows agentPolicies to honor kubernetesAuditLogs.enabled (plain values files cannot).
+*/ -}}
+{{- $eckStack := index .Values "eck-stack" | default dict -}}
+{{- $fleetServer := index $eckStack "eck-fleet-server" | default dict -}}
+{{- $kibanaVals := index $eckStack "eck-kibana" | default dict -}}
+{{- if and ($fleetServer.enabled | default false) (not ($kibanaVals.enabled | default false)) }}
+{{- $spec := $kibanaVals.spec | default dict -}}
+{{- $config := $spec.config | default dict -}}
+{{- $audit := .Values.kubernetesAuditLogs | default dict -}}
+{{- $auditEnabled := $audit.enabled | default false -}}
+{{- $auditPaths := $audit.paths | default (list "/var/log/kubernetes/kube-apiserver-audit.log") -}}
+---
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: {{ $kibanaVals.fullnameOverride | default "kibana" }}
+  labels:
+    {{- include "eck-stack-wrapper.labels" . | nindent 4 }}
+  annotations:
+    eck.k8s.elastic.co/license: basic
+spec:
+  version: {{ required "eck-stack.eck-kibana.version is required when rendering fleet Kibana" $kibanaVals.version }}
+  count: {{ $spec.count | default 1 }}
+  elasticsearchRef:
+    {{- toYaml ($kibanaVals.elasticsearchRef | default (dict "name" "elasticsearch")) | nindent 4 }}
+  config:
+    {{- /* Preserve non-agentPolicy fleet settings from values (hosts, packages, etc.). */ -}}
+    {{- range $key, $value := $config }}
+    {{- if ne $key "xpack.fleet.agentPolicies" }}
+    {{ $key }}:
+      {{- toYaml $value | nindent 6 }}
+    {{- end }}
+    {{- end }}
+    xpack.fleet.agentPolicies:
+      - name: Fleet Server on ECK policy
+        id: eck-fleet-server
+        namespace: default
+        is_managed: true
+        monitoring_enabled:
+          - logs
+          - metrics
+        package_policies:
+          - name: fleet_server-1
+            id: fleet_server-1
+            package:
+              name: fleet_server
+      - name: Elastic Agent on ECK policy
+        id: eck-agent
+        namespace: default
+        is_managed: true
+        monitoring_enabled:
+          - logs
+          - metrics
+        unenroll_timeout: 900
+        package_policies:
+          - name: system-1
+            id: system-1
+            package:
+              name: system
+          - name: kubernetes-1
+            id: kubernetes-1
+            package:
+              name: kubernetes
+            # Object-map input ids (policy_template-inputtype). Enable Collect
+            # Kubernetes audit logs from local files when kubernetesAuditLogs.enabled.
+            inputs:
+              audit-logs-filestream:
+                enabled: {{ $auditEnabled }}
+                {{- if $auditEnabled }}
+                streams:
+                  kubernetes.audit_logs:
+                    enabled: true
+                    vars:
+                      paths:
+                        {{- toYaml $auditPaths | nindent 24 }}
+                {{- end }}
+          - name: otlp-1
+            id: otlp-1
+            package:
+              name: otlp_input_otel
+            # kibana.yml only accepts array-format inputs (not the object-map format
+            # used by system/kubernetes). Vars live on the stream; frozen is required
+            # to update an existing managed otlp-1 policy on Kibana restart.
+            inputs:
+              - type: otelcol
+                enabled: true
+                streams:
+                  - data_stream:
+                      dataset: otlp_input_otel.otlpreceiver
+                    enabled: true
+                    vars:
+                      - name: grpc_endpoint
+                        value: 0.0.0.0:4317
+                        frozen: true
+                      - name: http_endpoint
+                        value: 0.0.0.0:4318
+                        frozen: true
+{{- end }}
