@@ -63,14 +63,14 @@ spec:
             id: kubernetes-1
             package:
               name: kubernetes
-            # Object-map input ids (policy_template-inputtype). Enable Collect
-            # Kubernetes audit logs from local files when kubernetesAuditLogs.enabled.
+            # Simplified input map (policy_template-inputtype). Quote the stream
+            # dataset key so YAML does not nest kubernetes.audit_logs into an object.
             inputs:
               audit-logs-filestream:
                 enabled: {{ $auditEnabled }}
                 {{- if $auditEnabled }}
                 streams:
-                  kubernetes.audit_logs:
+                  "kubernetes.audit_logs":
                     enabled: true
                     vars:
                       paths:
