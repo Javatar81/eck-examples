@@ -63,14 +63,15 @@ spec:
             id: kubernetes-1
             package:
               name: kubernetes
-            # Simplified input map (policy_template-inputtype). Quote the stream
-            # dataset key so YAML does not nest kubernetes.audit_logs into an object.
+            # Simplified input map (policy_template-inputtype). Bracket-escape the
+            # dotted stream dataset so ECK does not expand it when writing kibana.yml.
+            # See: https://github.com/elastic/cloud-on-k8s/issues/8499
             inputs:
               audit-logs-filestream:
                 enabled: {{ $auditEnabled }}
                 {{- if $auditEnabled }}
                 streams:
-                  "kubernetes.audit_logs":
+                  '[kubernetes.audit_logs]':
                     enabled: true
                     vars:
                       paths:
