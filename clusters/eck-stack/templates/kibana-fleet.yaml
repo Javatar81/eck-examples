@@ -1,6 +1,7 @@
 {{- /*
   Renders Kibana when Fleet Server is enabled and the eck-kibana subchart is disabled.
-  Allows agentPolicies to honor kubernetesAuditLogs.enabled (plain values files cannot).
+  Allows agentPolicies to honor kubernetesAuditLogs.enabled and elasticDefend.enabled
+  (plain values files cannot).
 */ -}}
 {{- $eckStack := index .Values "eck-stack" | default dict -}}
 {{- $fleetServer := index $eckStack "eck-fleet-server" | default dict -}}
@@ -11,6 +12,9 @@
 {{- $audit := .Values.kubernetesAuditLogs | default dict -}}
 {{- $auditEnabled := $audit.enabled | default false -}}
 {{- $auditPaths := $audit.paths | default (list "/var/log/kubernetes/kube-apiserver-audit.log") -}}
+{{- $defend := .Values.elasticDefend | default dict -}}
+{{- $defendEnabled := $defend.enabled | default false -}}
+{{- $packages := index $config "xpack.fleet.packages" | default list -}}
 ---
 apiVersion: kibana.k8s.elastic.co/v1
 kind: Kibana
@@ -26,13 +30,19 @@ spec:
   elasticsearchRef:
     {{- toYaml ($kibanaVals.elasticsearchRef | default (dict "name" "elasticsearch")) | nindent 4 }}
   config:
-    {{- /* Preserve non-agentPolicy fleet settings from values (hosts, packages, etc.). */ -}}
+    {{- /* Preserve non-agentPolicy / non-packages fleet settings from values (hosts, etc.). */ -}}
     {{- range $key, $value := $config }}
-    {{- if ne $key "xpack.fleet.agentPolicies" }}
+    {{- if and (ne $key "xpack.fleet.agentPolicies") (ne $key "xpack.fleet.packages") }}
     {{ $key }}:
       {{- toYaml $value | nindent 6 }}
     {{- end }}
     {{- end }}
+    xpack.fleet.packages:
+      {{- toYaml $packages | nindent 6 }}
+      {{- if $defendEnabled }}
+      - name: cloud_defend
+        version: latest
+      {{- end }}
     xpack.fleet.agentPolicies:
       - name: Fleet Server on ECK policy
         id: eck-fleet-server
@@ -98,4 +108,34 @@ spec:
                       - name: http_endpoint
                         value: 0.0.0.0:4318
                         frozen: true
+          {{- if $defendEnabled }}
+          # Defend for Containers (cloud_defend) — supported on Elastic Agent DaemonSets.
+          # Default policy: process telemetry (log) + executable drift alerts.
+          # See: https://www.elastic.co/docs/solutions/security/cloud/d4c/get-started-with-d4c
+          # See: https://www.elastic.co/docs/reference/integrations/cloud_defend
+          - name: cloud_defend-1
+            id: cloud_defend-1
+            package:
+              name: cloud_defend
+            inputs:
+              - type: cloud_defend/control
+                enabled: true
+                vars:
+                  - name: configuration
+                    value: |
+                      process:
+                        selectors:
+                          - name: allProcesses
+                            operation: [fork, exec]
+                        responses:
+                          - match: [allProcesses]
+                            actions: [log]
+                      file:
+                        selectors:
+                          - name: executableChanges
+                            operation: [createExecutable, modifyExecutable]
+                        responses:
+                          - match: [executableChanges]
+                            actions: [alert]
+          {{- end }}
 {{- end }}

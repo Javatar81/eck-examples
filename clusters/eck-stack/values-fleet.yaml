@@ -7,6 +7,12 @@
 #   --set kubernetesAuditLogs.enabled=true
 # Requires the API server to write audit logs under kubernetesAuditLogs.paths (hostPath-mounted).
 # See: https://www.elastic.co/docs/reference/integrations/kubernetes/audit-logs
+#
+# Add Defend for Containers (cloud_defend) to the Fleet agent policy:
+#   --set elasticDefend.enabled=true
+# DaemonSet below includes the BPF capabilities and hostPath mounts D4C requires.
+# See: https://www.elastic.co/docs/solutions/security/cloud/d4c/get-started-with-d4c
+# See: https://www.elastic.co/docs/reference/integrations/cloud_defend
 # See: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/managing-deployments-using-helm-chart
 
 fleet:
@@ -20,6 +26,10 @@ kubernetesAuditLogs:
   enabled: false
   paths:
     - /var/log/kubernetes/kube-apiserver-audit.log
+
+# Opt-in: Defend for Containers (cloud_defend) on the eck-agent DaemonSet policy.
+elasticDefend:
+  enabled: false
 
 eck-stack:
   # Disabled here; templates/kibana-fleet.yaml renders Kibana so agentPolicies can
@@ -93,14 +103,53 @@ eck-stack:
             - key: node-role.kubernetes.io/control-plane
               operator: Exists
               effect: NoSchedule
-          # Mount node logs so audit_logs (and container logs) are readable.
+          # varlog: audit_logs / container logs.
+          # proc, boot, sys-*: required for Defend for Containers (cloud_defend).
           volumes:
             - name: varlog
               hostPath:
                 path: /var/log
+            - name: proc
+              hostPath:
+                path: /proc
+            - name: sys-kernel-debug
+              hostPath:
+                path: /sys/kernel/debug
+            - name: boot
+              hostPath:
+                path: /boot
+            - name: sys-fs-bpf
+              hostPath:
+                path: /sys/fs/bpf
+            - name: sys-kernel-security
+              hostPath:
+                path: /sys/kernel/security
           containers:
             - name: agent
+              # HOSTFS_PROC_PATH + BPF caps required for Defend for Containers.
+              env:
+                - name: HOSTFS_PROC_PATH
+                  value: /hostfs/proc
+              securityContext:
+                capabilities:
+                  add:
+                    - BPF
+                    - PERFMON
+                    - SYS_RESOURCE
               volumeMounts:
                 - name: varlog
                   mountPath: /var/log
+                  readOnly: true
+                - name: proc
+                  mountPath: /hostfs/proc
+                  readOnly: true
+                - name: sys-kernel-debug
+                  mountPath: /sys/kernel/debug
+                - name: boot
+                  mountPath: /boot
+                  readOnly: true
+                - name: sys-fs-bpf
+                  mountPath: /sys/fs/bpf
+                - name: sys-kernel-security
+                  mountPath: /sys/kernel/security
                   readOnly: true

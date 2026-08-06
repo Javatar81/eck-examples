@@ -27,6 +27,14 @@ kubernetesAuditLogs:
   paths:
     - /var/log/kubernetes/kube-apiserver-audit.log
 
+# Opt-in Defend for Containers (cloud_defend) on the Fleet agent policy.
+# Enable with: --set elasticDefend.enabled=true
+# Requires DaemonSet BPF capabilities and hostPath mounts (see values-fleet.yaml).
+# See: https://www.elastic.co/docs/solutions/security/cloud/d4c/get-started-with-d4c
+# See: https://www.elastic.co/docs/reference/integrations/cloud_defend
+elasticDefend:
+  enabled: false
+
 eck-stack:
   eck-elasticsearch:
     enabled: true
